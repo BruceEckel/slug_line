@@ -22,3 +22,6 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/slug_line"]
+
+[project.scripts]
+slugline = 'slug_line.slug_line:main'
