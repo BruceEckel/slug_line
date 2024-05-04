@@ -2,13 +2,34 @@
 import argparse
 from pathlib import Path
 import re
+from dataclasses import dataclass
 
 
-def create_or_update_slug_line(file_path: Path) -> bool:
+@dataclass
+class Changed:
+    file_name: str
+    modified: bool = None  # type: ignore
+
+    def true(self):
+        self.modified = True
+        return self
+
+    def false(self):
+        self.modified = False
+        return self
+
+    def report(self) -> str:
+        assert self.modified is not None, "Must call true() or false() for Changed"
+        if self.modified:
+            return f"updated:   {self.file_name}"
+        return f"unchanged: {self.file_name}"
+
+
+def ensure_slug_line(file_path: Path) -> Changed:
     """
     Create or update the slug line in the Python file: file_path.
     """
-    print(f"Checking {file_path.name}", end=" ... ")
+    changed = Changed(file_path.name)
     lines = file_path.read_text(encoding="utf-8").splitlines(True)
 
     # Check if the first line is a slug line
@@ -18,34 +39,28 @@ def create_or_update_slug_line(file_path: Path) -> bool:
         if lines[0] != correct_slug_line:
             lines[0] = correct_slug_line
             file_path.write_text("".join(lines), encoding="utf-8")
-            print("fixed")
-            return True  # Update happened
-        print("no change")
-        return False  # No update
+            return changed.true()
+        return changed.false()
     else:
         # Slug line doesn't exist, insert one at the beginning
         slug_line = f"#: {file_path.name}\n"
         lines.insert(0, slug_line)
         file_path.write_text("".join(lines), encoding="utf-8")
-        print("fixed")
-        return True  # Slug line inserted
-
-    print("no change")
-    return False  # No update
+        return changed.true()
 
 
 def main():
-    parser = argparse.ArgumentParser(
+    argparse.ArgumentParser(
         description="Create or update slug lines in Python files"
-    )
-    parser.parse_args()
+    ).parse_args()  # Provide -h help flag
 
-    code_files = list(Path(".").glob("*.py"))
-    if not code_files:
+    if not (code_files := list(Path(".").glob("*.py"))):
         print("No Python files found")
         return
-    results = [create_or_update_slug_line(code_file) for code_file in code_files]
-    print(f"Number of changes: {results.count(True)}")
+    results = [ensure_slug_line(code_file) for code_file in code_files]
+    for r in results:
+        print(r.report())
+    print(f"Number of changes: {len(list(filter(lambda r: r.modified, results)))}")
 
 
 if __name__ == "__main__":
