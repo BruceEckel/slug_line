@@ -3,6 +3,9 @@ import argparse
 from pathlib import Path
 import re
 from dataclasses import dataclass
+from rich.console import Console
+
+console = Console()
 
 
 @dataclass
@@ -10,24 +13,24 @@ class Changed:
     file_name: str
     modified: bool = None  # type: ignore
 
-    def true(self):
+    def true(self) -> "Changed":
         self.modified = True
         return self
 
-    def false(self):
+    def false(self) -> "Changed":
         self.modified = False
         return self
 
     def report(self) -> str:
         assert self.modified is not None, "Must call true() or false() for Changed"
         if self.modified:
-            return f"updated:   {self.file_name}"
-        return f"unchanged: {self.file_name}"
+            return f"[bold red]{self.file_name}"
+        return f"[bold green]{self.file_name}"
 
 
 def ensure_slug_line(file_path: Path) -> Changed:
     """
-    Create or update the slug line in the Python file: file_path.
+    Create or update the slug line in the Python file: file_path
     """
     changed = Changed(file_path.name)
     lines = file_path.read_text(encoding="utf-8").splitlines(True)
@@ -55,12 +58,12 @@ def main():
     ).parse_args()  # Provide -h help flag
 
     if not (code_files := list(Path(".").glob("*.py"))):
-        print("No Python files found")
+        console.print("No Python files found")
         return
-    results = [ensure_slug_line(code_file) for code_file in code_files]
+    results = [ensure_slug_line(listing) for listing in code_files]
     for r in results:
-        print(r.report())
-    print(f"Number of changes: {len(list(filter(lambda r: r.modified, results)))}")
+        console.print(r.report())
+    console.print(f"Number of changes: {sum(r.modified for r in results)}")
 
 
 if __name__ == "__main__":
