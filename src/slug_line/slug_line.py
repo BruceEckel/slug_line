@@ -65,7 +65,7 @@ def main():
     if not (code_files := list(Path(".").glob(mask))):
         console.print("No Python files found")
         return
-    results = [ensure_slug_line(listing) for listing in code_files]
+    results = [ensure_slug_line(listing, args.full_path) for listing in code_files]
     for r in results:
         console.print(r.report())
     console.print(f"Number of changes: {sum(r.modified for r in results)}")
