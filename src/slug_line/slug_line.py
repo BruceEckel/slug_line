@@ -53,7 +53,7 @@ def ensure_slug_line(file_path: Path) -> Changed:
 
 def main():
     argparse.ArgumentParser(
-        description="Create or update slug lines in Python files"
+        description="Create or update slug lines (commented file name at top) in Python files"
     ).parse_args()  # Provide -h help flag
 
     if not (code_files := list(Path(".").glob("*.py"))):
