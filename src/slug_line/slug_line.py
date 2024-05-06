@@ -28,13 +28,15 @@ class Changed:
         return f"[bold green]{self.file_name}"
 
 
-def ensure_slug_line(file_path: Path) -> Changed:
+def ensure_slug_line(file_path: Path, full_path=False) -> Changed:
     """
     Create or update the slug line in the Python file: file_path
     """
+    #print(file_path)
     changed = Changed(file_path.name)
     lines = file_path.read_text(encoding="utf-8").splitlines(True)
-    correct_slug_line = f"#: {file_path.name}\n"
+    filename = file_path if full_path else file_path.name
+    correct_slug_line = f"#: {filename}\n"
 
     # Check if the first line is a slug line
     if lines and re.match(r"^#\:\s\w+\.py\n$", lines[0]):
@@ -52,11 +54,15 @@ def ensure_slug_line(file_path: Path) -> Changed:
 
 
 def main():
-    argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         description="Create or update slug lines (commented file name at top) in Python files"
-    ).parse_args()  # Provide -h help flag
+    )
+    parser.add_argument('-r', '--recursive', action='store_true', help='recursively search for python files')
+    parser.add_argument('-f', '--full-path', action='store_true', help='include full path in slug line')
+    args = parser.parse_args()
 
-    if not (code_files := list(Path(".").glob("*.py"))):
+    mask = "**/*.py" if args.recursive else "*.py"
+    if not (code_files := list(Path(".").glob(mask))):
         console.print("No Python files found")
         return
     results = [ensure_slug_line(listing) for listing in code_files]
