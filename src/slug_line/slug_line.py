@@ -1,8 +1,9 @@
 #: slug_line.py
 import argparse
-from pathlib import Path
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
+
 from rich.console import Console
 
 console = Console()
@@ -11,7 +12,7 @@ console = Console()
 @dataclass
 class Changed:
     file_name: str
-    # Init to False and exclude field from constructor arguments
+    # Set to False and exclude field from constructor arguments
     modified: bool = field(default=False, init=False)
 
     def true(self) -> "Changed":
@@ -52,13 +53,26 @@ def ensure_slug_line(file_path: Path) -> Changed:
 
 
 def main():
-    argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         description="Create or update slug lines (commented file name at top) in Python files"
-    ).parse_args()  # Provide -h help flag
+    )
+    parser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="Recursively search for Python files in subdirectories",
+    )
+    args = parser.parse_args()
 
-    if not (code_files := list(Path(".").glob("*.py"))):
+    if args.recursive:
+        code_files = list(Path(".").rglob("*.py"))
+    else:
+        code_files = list(Path(".").glob("*.py"))
+
+    if not code_files:
         console.print("No Python files found")
         return
+
     results = [ensure_slug_line(listing) for listing in code_files]
     for r in results:
         console.print(r.report())
