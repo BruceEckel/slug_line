@@ -24,8 +24,8 @@ class Changed:
 
     def report(self) -> str:
         if self.modified:
-            return f"[bold red]{self.file_name}"
-        return f"[bold green]{self.file_name}"
+            return f"[bold red]{self.file_name}[/bold red]"
+        return f"[bold green]{self.file_name}[/bold green]"
 
 
 def ensure_slug_line(file_path: Path) -> Changed:
@@ -62,7 +62,9 @@ def main():
     results = [ensure_slug_line(listing) for listing in code_files]
     for r in results:
         console.print(r.report())
-    console.print(f"Number of changes: {sum(r.modified for r in results)}")
+    console.print(
+        f"[bold blue]Number of changes[/bold blue]: {sum(r.modified for r in results)}"
+    )
 
 
 if __name__ == "__main__":
