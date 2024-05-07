@@ -60,12 +60,16 @@ def main():
         "-r",
         "--recursive",
         action="store_true",
-        help="Recursively search for Python files in subdirectories",
+        help="Recursively search for Python files in subdirectories (that don't start with '.')",
     )
     args = parser.parse_args()
 
     if args.recursive:
-        code_files = list(Path(".").rglob("*.py"))
+        code_files = [
+            file
+            for file in Path(".").rglob("*.py")
+            if not any(part.startswith(".") for part in file.parts)
+        ]
     else:
         code_files = list(Path(".").glob("*.py"))
 
